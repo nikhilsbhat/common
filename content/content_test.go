@@ -3,12 +3,12 @@ package content_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/nikhilsbhat/common/renderer"
 	"os"
 	"testing"
 
 	"github.com/nikhilsbhat/common/content"
-	goCdLogger "github.com/nikhilsbhat/gocd-sdk-go/pkg/logger"
+	"github.com/nikhilsbhat/common/renderer"
+	"github.com/nikhilsbhat/gocd-sdk-go/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,11 +17,11 @@ var log *logrus.Logger
 
 //nolint:gochecknoinits
 func init() {
-	logger := logrus.New()
-	logger.SetLevel(goCdLogger.GetLoglevel("info"))
-	logger.WithField("gocd-cli", true)
-	logger.SetFormatter(&logrus.JSONFormatter{})
-	log = logger
+	logrusLogger := logrus.New()
+	logrusLogger.SetLevel(logger.GetLoglevel("info"))
+	logrusLogger.WithField("gocd-cli", true)
+	logrusLogger.SetFormatter(&logrus.JSONFormatter{})
+	log = logrusLogger
 }
 
 func TestObject_CheckFileType(t *testing.T) {
@@ -81,10 +81,9 @@ name: "testing"`)
 			{"D", "The Gopher", "800"},
 		}
 
-		logger := logrus.New()
 		strReader := new(bytes.Buffer)
 
-		render := renderer.GetRenderer(strReader, logger, false, false, false, true)
+		render := renderer.GetRenderer(strReader, log, false, false, false, true)
 
 		err := render.Render(data)
 		assert.NoError(t, err)

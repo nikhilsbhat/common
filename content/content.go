@@ -68,6 +68,7 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	return FileTypeUnknown
 }
 
+// String should return the string equivalent of Object.
 func (obj Object) String() string {
 	return string(obj)
 }

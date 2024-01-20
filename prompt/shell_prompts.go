@@ -67,12 +67,12 @@ func (cfg *ReadConfig) Reader() (bool, Options) {
 			return true, option
 		}
 
-		cfg.logger.Errorf("the options should be one of '%s'", funk.FlattenDeep(cfg.InputOptions))
+		cfg.logger.Errorf("the options should be one of '%s'", flattenedInputs)
 	}
 }
 
 // Contains checks if user passed input is part of predefined Options.
-// If yes returns true else returns false.
+// If yes returns 'true' else returns 'false'.
 func (inputOptions Option) Contains(input string) (bool, Options) {
 	var option Options
 

@@ -2,12 +2,15 @@ package renderer_test
 
 import (
 	"bytes"
+	"log"
+	"os"
+	"testing"
+
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/common/prompt"
 	"github.com/nikhilsbhat/common/renderer"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestGetRenderer(t *testing.T) {
@@ -107,5 +110,24 @@ func TestGetRenderer(t *testing.T) {
 
 		err := render.Render([]prompt.ReadConfig{*cliShellReadConfig})
 		assert.NoError(t, err)
+	})
+
+	t.Run("", func(t *testing.T) {
+		type Object struct {
+			Name string
+			Date string
+		}
+
+		newObject := []Object{
+			{Name: "nikhil", Date: "01-01-2024"},
+			{Name: "jon", Date: "01-02-2024"},
+		}
+
+		logger := logrus.New()
+		render := renderer.GetRenderer(os.Stdout, logger, true, false, false, false)
+
+		if err := render.Render(newObject); err != nil {
+			log.Fatal(err)
+		}
 	})
 }
