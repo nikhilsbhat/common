@@ -82,7 +82,7 @@ name: "testing"`)
 
 		strReader := new(bytes.Buffer)
 
-		render := renderer.GetRenderer(strReader, log, false, false, false, true)
+		render := renderer.GetRenderer(strReader, log, false, false, false, false, true)
 
 		err := render.Render(data)
 		assert.NoError(t, err)

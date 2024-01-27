@@ -18,7 +18,7 @@ func Test_colorJSON(t *testing.T) {
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logrus.New())
 
 		strReader := new(bytes.Buffer)
-		config := renderer.GetRenderer(strReader, logrus.New(), false, true, false, false)
+		config := renderer.GetRenderer(strReader, logrus.New(), false, false, true, false, false)
 
 		colorString, err := config.ColorJSON(cliShellReadConfig)
 		assert.NoError(t, err)
@@ -33,7 +33,7 @@ func Test_colorJSON(t *testing.T) {
 		assert.NoError(t, err)
 
 		strReader := new(bytes.Buffer)
-		config := renderer.GetRenderer(strReader, logrus.New(), true, false, false, false)
+		config := renderer.GetRenderer(strReader, logrus.New(), false, true, false, false, false)
 
 		colorString, err := config.ColorYAML(string(valueYAML))
 		assert.NoError(t, err)

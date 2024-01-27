@@ -68,6 +68,15 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	return FileTypeUnknown
 }
 
+func Marshal(data interface{}) (Object, error) {
+	out, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+
+	return Object(out), nil
+}
+
 // String should return the string equivalent of Object.
 func (obj Object) String() string {
 	return string(obj)

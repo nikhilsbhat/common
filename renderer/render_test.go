@@ -18,7 +18,7 @@ func TestGetRenderer(t *testing.T) {
 		strReader := new(bytes.Buffer)
 
 		logger := logrus.New()
-		render := renderer.GetRenderer(strReader, logger, false, false, true, false)
+		render := renderer.GetRenderer(strReader, logger, false, false, false, true, false)
 
 		inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -35,7 +35,7 @@ func TestGetRenderer(t *testing.T) {
 		strReader := new(bytes.Buffer)
 
 		logger := logrus.New()
-		render := renderer.GetRenderer(strReader, logger, false, true, false, false)
+		render := renderer.GetRenderer(strReader, logger, false, false, true, false, false)
 
 		inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -52,7 +52,7 @@ func TestGetRenderer(t *testing.T) {
 		strReader := new(bytes.Buffer)
 
 		logger := logrus.New()
-		render := renderer.GetRenderer(strReader, logger, true, false, false, false)
+		render := renderer.GetRenderer(strReader, logger, false, true, false, false, false)
 
 		inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -70,7 +70,7 @@ func TestGetRenderer(t *testing.T) {
 
 		logger := logrus.New()
 		logger.SetLevel(logrus.DebugLevel)
-		render := renderer.GetRenderer(strReader, logger, false, false, false, true)
+		render := renderer.GetRenderer(strReader, logger, false, false, false, false, true)
 
 		data := [][]string{
 			{"sn", "cat", "value"},
@@ -92,7 +92,7 @@ func TestGetRenderer(t *testing.T) {
 		strReader := new(bytes.Buffer)
 
 		logger := logrus.New()
-		render := renderer.GetRenderer(strReader, logger, false, false, false, false)
+		render := renderer.GetRenderer(strReader, logger, false, false, false, false, false)
 
 		inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -103,7 +103,7 @@ func TestGetRenderer(t *testing.T) {
 
 	t.Run("should render in defaults to stdout since no writer or render type specified", func(t *testing.T) {
 		logger := logrus.New()
-		render := renderer.GetRenderer(nil, logger, false, false, false, false)
+		render := renderer.GetRenderer(nil, logger, false, false, false, false, false)
 
 		inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 		cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -124,7 +124,7 @@ func TestGetRenderer(t *testing.T) {
 		}
 
 		logger := logrus.New()
-		render := renderer.GetRenderer(os.Stdout, logger, true, false, false, false)
+		render := renderer.GetRenderer(os.Stdout, logger, false, true, false, false, false)
 
 		if err := render.Render(newObject); err != nil {
 			log.Fatal(err)
