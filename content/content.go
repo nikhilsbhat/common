@@ -45,11 +45,11 @@ func IsCSV(content string) bool {
 func (obj Object) CheckFileType(log *logrus.Logger) string {
 	log.Debug("identifying the input file type, allowed types are YAML/JSON/CSV")
 
-	//if IsCSV(string(obj)) {
+	// if IsCSV(string(obj)) {
 	//	log.Debug("input file type identified as CSV")
 	//
 	//	return FileTypeCSV
-	//}
+	// }
 
 	if IsJSON(string(obj)) {
 		log.Debug("input file type identified as JSON")

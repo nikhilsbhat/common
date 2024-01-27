@@ -1,4 +1,5 @@
-package main //nolint:typecheck
+// nolint:typecheck
+package main
 
 import (
 	"fmt"

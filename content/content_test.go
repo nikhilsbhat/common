@@ -2,7 +2,6 @@ package content_test
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"testing"
 
@@ -87,8 +86,6 @@ name: "testing"`)
 
 		err := render.Render(data)
 		assert.NoError(t, err)
-
-		fmt.Printf("value: %s\n", strReader.String())
 
 		obj := content.Object(strReader.String())
 		actual := obj.CheckFileType(log)

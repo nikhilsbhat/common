@@ -16,12 +16,13 @@ import (
 
 // Config implements methods to render output in JSON/YAML format.
 type Config struct {
-	YAML   bool `json:"yaml,omitempty" yaml:"yaml,omitempty"`
-	JSON   bool `json:"json,omitempty" yaml:"json,omitempty"`
-	CSV    bool `json:"csv,omitempty" yaml:"csv,omitempty"`
-	Table  bool `json:"table,omitempty" yaml:"table,omitempty"`
-	writer *bufio.Writer
-	logger *logrus.Logger
+	YAML    bool `json:"yaml,omitempty" yaml:"yaml,omitempty"`
+	JSON    bool `json:"json,omitempty" yaml:"json,omitempty"`
+	CSV     bool `json:"csv,omitempty" yaml:"csv,omitempty"`
+	Table   bool `json:"table,omitempty" yaml:"table,omitempty"`
+	NoColor bool `json:"no_color,omitempty" yaml:"no_color,omitempty"`
+	writer  *bufio.Writer
+	logger  *logrus.Logger
 }
 
 // Renderer implements methods that Prints values in YAML,JSON,CSV and Table format.
@@ -34,43 +35,43 @@ type Renderer interface {
 
 // Render renders the output based on the output format selection (toYAML, toJSON).
 // If none is selected it prints as the source.
-func (r *Config) Render(value interface{}) error {
-	if r.JSON {
-		return r.ToJSON(value)
+func (cfg *Config) Render(value interface{}) error {
+	if cfg.JSON {
+		return cfg.ToJSON(value)
 	}
 
-	if r.YAML {
-		return r.ToYAML(value)
+	if cfg.YAML {
+		return cfg.ToYAML(value)
 	}
 
-	if r.CSV {
-		return r.ToCSV(value)
+	if cfg.CSV {
+		return cfg.ToCSV(value)
 	}
 
-	if r.Table {
-		return r.ToTable(value)
+	if cfg.Table {
+		return cfg.ToTable(value)
 	}
 
-	r.logger.Debug("no format was specified for rendering output to defaults")
+	cfg.logger.Debug("no format was specified for rendering output to defaults")
 
-	_, err := r.writer.Write([]byte(fmt.Sprintf("%v\n", value)))
+	_, err := cfg.writer.Write([]byte(fmt.Sprintf("%v\n", value)))
 	if err != nil {
-		r.logger.Fatalln(err)
+		cfg.logger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			r.logger.Fatalln(err)
+			cfg.logger.Fatalln(err)
 		}
-	}(r.writer)
+	}(cfg.writer)
 
 	return nil
 }
 
 // ToYAML renders the value to YAML format.
-func (r *Config) ToYAML(value interface{}) error {
-	r.logger.Debug("rendering output in yaml format since Config.YAML is enabled")
+func (cfg *Config) ToYAML(value interface{}) error {
+	cfg.logger.Debug("rendering output in yaml format since Config.YAML is enabled")
 
 	valueYAML, err := yaml.Marshal(value)
 	if err != nil {
@@ -79,24 +80,33 @@ func (r *Config) ToYAML(value interface{}) error {
 
 	yamlString := strings.Join([]string{"---", string(valueYAML)}, "\n")
 
-	_, err = r.writer.Write([]byte(yamlString))
+	if !cfg.NoColor {
+		coloredYAMLString, err := cfg.ColorYAML(yamlString)
+		if err != nil {
+			return err
+		}
+
+		yamlString = coloredYAMLString
+	}
+
+	_, err = cfg.writer.Write([]byte(yamlString))
 	if err != nil {
-		r.logger.Fatalln(err)
+		cfg.logger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			r.logger.Fatalln(err)
+			cfg.logger.Fatalln(err)
 		}
-	}(r.writer)
+	}(cfg.writer)
 
 	return nil
 }
 
 // ToJSON renders the value to JSON format.
-func (r *Config) ToJSON(value interface{}) error {
-	r.logger.Debug("rendering output in json format since Config.JSON is enabled")
+func (cfg *Config) ToJSON(value interface{}) error {
+	cfg.logger.Debug("rendering output in json format since Config.JSON is enabled")
 
 	valueJSON, err := json.MarshalIndent(value, "", "     ")
 	if err != nil {
@@ -105,48 +115,57 @@ func (r *Config) ToJSON(value interface{}) error {
 
 	jsonString := strings.Join([]string{string(valueJSON), "\n"}, "")
 
-	_, err = r.writer.Write([]byte(jsonString))
+	if !cfg.NoColor {
+		coloredJSONString, err := cfg.ColorJSON(value)
+		if err != nil {
+			return err
+		}
+
+		jsonString = coloredJSONString
+	}
+
+	_, err = cfg.writer.Write([]byte(jsonString))
 	if err != nil {
-		r.logger.Fatalln(err)
+		cfg.logger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			r.logger.Fatalln(err)
+			cfg.logger.Fatalln(err)
 		}
-	}(r.writer)
+	}(cfg.writer)
 
 	return nil
 }
 
 // ToCSV renders the value to CSV format.
-func (r *Config) ToCSV(value interface{}) error {
-	r.logger.Debug("rendering output in csv format since Config.CSV is enabled")
+func (cfg *Config) ToCSV(value interface{}) error {
+	cfg.logger.Debug("rendering output in csv format since Config.CSV is enabled")
 
 	csvString, err := gocsv.MarshalString(value)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.writer.Write([]byte(csvString))
+	_, err = cfg.writer.Write([]byte(csvString))
 	if err != nil {
-		r.logger.Fatalln(err)
+		cfg.logger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			r.logger.Fatalln(err)
+			cfg.logger.Fatalln(err)
 		}
-	}(r.writer)
+	}(cfg.writer)
 
 	return nil
 }
 
 // ToTable renders the value to Table format.
-func (r *Config) ToTable(value interface{}) error {
-	r.logger.Debug("rendering output in table format since Config.ToTabled is enabled")
+func (cfg *Config) ToTable(value interface{}) error {
+	cfg.logger.Debug("rendering output in table format since Config.ToTabled is enabled")
 
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
@@ -159,29 +178,30 @@ func (r *Config) ToTable(value interface{}) error {
 	table.AppendBulk(value.([][]string))
 	table.Render()
 
-	_, err := r.writer.Write([]byte(tableString.String()))
+	_, err := cfg.writer.Write([]byte(tableString.String()))
 	if err != nil {
-		r.logger.Fatalln(err)
+		cfg.logger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			r.logger.Fatalln(err)
+			cfg.logger.Fatalln(err)
 		}
-	}(r.writer)
+	}(cfg.writer)
 
 	return nil
 }
 
 // GetRenderer returns the new instance of Config.
-func GetRenderer(writer io.Writer, log *logrus.Logger, yaml, json, csv, table bool) Config {
+func GetRenderer(writer io.Writer, log *logrus.Logger, noColor, yaml, json, csv, table bool) Config {
 	renderer := Config{
-		logger: log,
-		YAML:   yaml,
-		JSON:   json,
-		CSV:    csv,
-		Table:  table,
+		logger:  log,
+		YAML:    yaml,
+		JSON:    json,
+		CSV:     csv,
+		Table:   table,
+		NoColor: noColor,
 	}
 
 	if writer == nil {
