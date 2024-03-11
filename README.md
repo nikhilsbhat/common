@@ -49,7 +49,7 @@ func main() {
 	}
 
 	logger := logrus.New()
-	render := renderer.GetRenderer(os.Stdout, logger, true, false, false, false)
+	render := renderer.GetRenderer(os.Stdout, logger, true, true, false, false, false)
 
 	if err := render.Render(newObject); err != nil {
 		log.Fatal(err)

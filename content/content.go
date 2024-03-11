@@ -16,6 +16,7 @@ const (
 	FileTypeYAML    = "yaml"
 	FileTypeJSON    = "json"
 	FileTypeCSV     = "csv"
+	FileTypeString  = "string"
 	FileTypeUnknown = "unknown"
 )
 
@@ -26,9 +27,23 @@ func IsJSON(content string) bool {
 	return json.Unmarshal([]byte(content), &js) == nil
 }
 
+// IsJSONString checks if the passed content of JSON string.
+func IsJSONString(content string) bool {
+	var js string
+
+	return json.Unmarshal([]byte(content), &js) == nil
+}
+
 // IsYAML checks if the passed content of YAML.
 func IsYAML(content string) bool {
 	var yml interface{}
+
+	return yaml.Unmarshal([]byte(content), &yml) == nil
+}
+
+// IsYAMLString checks if the passed content of YAML string.
+func IsYAMLString(content string) bool {
+	var yml string
 
 	return yaml.Unmarshal([]byte(content), &yml) == nil
 }
@@ -50,6 +65,12 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	//
 	//	return FileTypeCSV
 	// }
+
+	if IsJSONString(string(obj)) || IsYAMLString(string(obj)) {
+		log.Debug("input file type identified as string")
+
+		return FileTypeString
+	}
 
 	if IsJSON(string(obj)) {
 		log.Debug("input file type identified as JSON")
