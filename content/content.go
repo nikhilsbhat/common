@@ -20,6 +20,12 @@ const (
 	FileTypeUnknown = "unknown"
 )
 
+func handlePanic(log *logrus.Logger) {
+	if r := recover(); r != nil {
+		log.Error("recovered from panic")
+	}
+}
+
 // IsJSON checks if the passed content of JSON.
 func IsJSON(content string) bool {
 	var js interface{}
@@ -35,15 +41,21 @@ func IsJSONString(content string) bool {
 }
 
 // IsYAML checks if the passed content of YAML.
-func IsYAML(content string) bool {
+func IsYAML(log *logrus.Logger, content string) bool {
 	var yml interface{}
+
+	// github.com/goccy/go-yaml can produce panics
+	defer handlePanic(log)
 
 	return yaml.Unmarshal([]byte(content), &yml) == nil
 }
 
 // IsYAMLString checks if the passed content of YAML string.
-func IsYAMLString(content string) bool {
+func IsYAMLString(log *logrus.Logger, content string) bool {
 	var yml string
+
+	// github.com/goccy/go-yaml can produce panics
+	defer handlePanic(log)
 
 	return yaml.Unmarshal([]byte(content), &yml) == nil
 }
@@ -66,7 +78,7 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	//	return FileTypeCSV
 	// }
 
-	if IsJSONString(string(obj)) || IsYAMLString(string(obj)) {
+	if IsJSONString(string(obj)) || IsYAMLString(log, string(obj)) {
 		log.Debug("input file type identified as string")
 
 		return FileTypeString
@@ -78,7 +90,7 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 		return FileTypeJSON
 	}
 
-	if IsYAML(string(obj)) {
+	if IsYAML(log, string(obj)) {
 		log.Debug("input file type identified as YAML")
 
 		return FileTypeYAML
