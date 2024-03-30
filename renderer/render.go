@@ -113,7 +113,7 @@ func (cfg *Config) ToJSON(value interface{}) error {
 		return err
 	}
 
-	jsonString := strings.Join([]string{string(valueJSON), "\n"}, "")
+	jsonString := string(valueJSON)
 
 	if !cfg.NoColor {
 		coloredJSONString, err := cfg.ColorJSON(value)
