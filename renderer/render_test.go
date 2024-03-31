@@ -19,7 +19,7 @@ func TestGetRenderer(t *testing.T) {
 	//	strReader := new(bytes.Buffer)
 	//
 	//	logger := logrus.New()
-	//	render := renderer.GetRenderer(strReader, logger, false, false, false, true, false)
+	//	render := renderer.GetRenderer(&errors.CommonError{Message: strReader, logger, false, false, false, true, false)
 	//
 	//	inputOptions := []prompt.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 	//	cliShellReadConfig := prompt.NewReadConfig("gocd-cli", "this is test message", inputOptions, logger)
@@ -31,7 +31,6 @@ func TestGetRenderer(t *testing.T) {
 	//	actual := obj.CheckFileType(logger)
 	//	assert.Equal(t, "csv", actual)
 	// })
-
 	t.Run("should be able to render the value to json successfully", func(t *testing.T) {
 		strReader := new(bytes.Buffer)
 
