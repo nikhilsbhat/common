@@ -3,113 +3,42 @@ package renderer
 import (
 	"bytes"
 	"fmt"
-	"os"
-
-	"github.com/fatih/color"
-	"github.com/goccy/go-yaml/lexer"
-	"github.com/goccy/go-yaml/printer"
-	"github.com/mattn/go-colorable"
-	"github.com/neilotoole/jsoncolor"
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/formatters"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/nikhilsbhat/common/errors"
 )
 
-// ColorJSON add colors to your JSON string.
-func (cfg *Config) ColorJSON(value interface{}) (string, error) {
-	strReader := new(bytes.Buffer)
+// Color add colors to your YAML, JSON or any specified string.
+func (cfg *Config) Color(contentType, yamlContent string) (string, error) {
+	lexer := lexers.Get(contentType)
+	if lexer == nil {
+		return "", &errors.CommonError{Message: "no YAML lexer found"}
+	}
+	lexer = chroma.Coalesce(lexer)
 
-	jsonEnc := jsoncolor.NewEncoder(strReader)
-	jsonColors := jsoncolor.DefaultColors()
-	jsonEnc.SetColors(jsonColors)
-	jsonEnc.SetIndent("", "   ")
-
-	if err := jsonEnc.Encode(value); err != nil {
-		return "", err
+	style := styles.Get("emacs")
+	if style == nil {
+		style = styles.Fallback
 	}
 
-	return strReader.String(), nil
-}
-
-// Shamelessly borrowed ycat functionality from https://github.com/goccy/go-yaml/blob/master/cmd/ycat/ycat.go with customized changes.
-
-// ColorYAML add colors to your YAML string.
-func (cfg *Config) ColorYAML(text string) (string, error) {
-	tokens := lexer.Tokenize(text)
-
-	var prnt printer.Printer
-
-	prnt.Bool = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiMagenta),
-			Suffix: format(color.Reset),
-		}
-	}
-	prnt.Number = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiMagenta),
-			Suffix: format(color.Reset),
-		}
-	}
-	prnt.MapKey = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiCyan),
-			Suffix: format(color.Reset),
-		}
-	}
-	prnt.Anchor = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiYellow),
-			Suffix: format(color.Reset),
-		}
-	}
-	prnt.Alias = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiYellow),
-			Suffix: format(color.Reset),
-		}
-	}
-	prnt.String = func() *printer.Property {
-		return &printer.Property{
-			Prefix: format(color.FgHiGreen),
-			Suffix: format(color.Reset),
-		}
+	formatter := formatters.Get("terminal")
+	if formatter == nil {
+		return "", &errors.CommonError{Message: "no terminal formatter found"}
 	}
 
-	outputFileCache := "highlighted_output.yaml"
-
-	file, err := os.Create(outputFileCache)
+	iterator, err := lexer.Tokenise(nil, yamlContent)
 	if err != nil {
-		if err = os.RemoveAll(outputFileCache); err != nil {
-			if !os.IsNotExist(err) {
-				return "", err
-			}
-		}
-
-		return "", err
+		return "", &errors.CommonError{Message: fmt.Sprintf("tokenise errored with '%v'", err)}
 	}
 
-	defer func() {
-		if err = os.RemoveAll(outputFileCache); err != nil {
-			if !os.IsNotExist(err) {
-				cfg.logger.Errorf("removing file %s as part of clean up errored with '%v'", outputFileCache, err)
-			}
-		}
-	}()
+	var stringBuffer bytes.Buffer
 
-	writer := colorable.NewColorable(file)
-
-	if _, err = writer.Write([]byte(prnt.PrintTokens(tokens) + "\n")); err != nil {
-		return "", err
-	}
-
-	highlightedOutputFile, err := os.ReadFile(outputFileCache)
+	err = formatter.Format(&stringBuffer, style, iterator)
 	if err != nil {
-		return "", err
+		return "", &errors.CommonError{Message: fmt.Sprintf("formatting yaml errored with '%v'", err)}
 	}
 
-	return string(highlightedOutputFile), nil
-}
-
-func format(attr color.Attribute) string {
-	const escape = "\x1b"
-
-	return fmt.Sprintf("%s[%dm", escape, attr)
+	return stringBuffer.String(), err
 }
