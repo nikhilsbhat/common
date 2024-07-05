@@ -81,7 +81,7 @@ func (cfg *Config) ToYAML(value interface{}) error {
 	yamlString := strings.Join([]string{"---", string(valueYAML)}, "\n")
 
 	if !cfg.NoColor {
-		coloredYAMLString, err := cfg.Color("yaml", string(valueYAML))
+		coloredYAMLString, err := cfg.Color(TypeYAML, string(valueYAML))
 		if err != nil {
 			return err
 		}
@@ -116,7 +116,7 @@ func (cfg *Config) ToJSON(value interface{}) error {
 	jsonString := string(valueJSON)
 
 	if !cfg.NoColor {
-		coloredJSONString, err := cfg.Color("json", jsonString)
+		coloredJSONString, err := cfg.Color(TypeJSON, jsonString)
 		if err != nil {
 			return err
 		}

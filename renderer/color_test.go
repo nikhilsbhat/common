@@ -56,6 +56,6 @@ spec:
 		config := renderer.GetRenderer(nil, logrus.New(), false, true, false, false, false)
 		out, err := config.Color("yaml", yamlContent)
 		assert.NoError(t, err)
-		fmt.Printf(out)
+		assert.NotNil(t, out)
 	})
 }
