@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/gocarina/gocsv"
+	"github.com/goccy/go-yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 )
@@ -73,7 +73,15 @@ func (cfg *Config) Render(value interface{}) error {
 func (cfg *Config) ToYAML(value interface{}) error {
 	cfg.logger.Debug("rendering output in yaml format since Config.YAML is enabled")
 
-	valueYAML, err := yaml.Marshal(value)
+	yamlIndent := 2
+
+	encodeOptions := []yaml.EncodeOption{
+		yaml.Indent(yamlIndent),
+		yaml.IndentSequence(true),
+		yaml.UseLiteralStyleIfMultiline(true),
+	}
+
+	valueYAML, err := yaml.MarshalWithOptions(value, encodeOptions...)
 	if err != nil {
 		return err
 	}

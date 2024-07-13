@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/prompt"
 	"github.com/nikhilsbhat/common/renderer"
 	"github.com/sirupsen/logrus"

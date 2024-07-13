@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/errors"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/sirupsen/logrus"
@@ -51,7 +51,15 @@ func (cfg *Config) Diff(oldData, newData string) (bool, string, error) {
 func (cfg *Config) String(input interface{}) (string, error) {
 	switch strings.ToLower(cfg.Format) {
 	case "yaml":
-		out, err := yaml.Marshal(input)
+		yamlIndent := 2
+
+		encodeOptions := []yaml.EncodeOption{
+			yaml.Indent(yamlIndent),
+			yaml.IndentSequence(true),
+			yaml.UseLiteralStyleIfMultiline(true),
+		}
+
+		out, err := yaml.MarshalWithOptions(input, encodeOptions...)
 		if err != nil {
 			return "", err
 		}
