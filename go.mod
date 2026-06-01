@@ -1,6 +1,6 @@
 module github.com/nikhilsbhat/common
 
-go 1.21.1
+go 1.24.0
 
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0
@@ -23,8 +23,8 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
