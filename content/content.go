@@ -3,11 +3,15 @@ package content
 import (
 	"encoding/csv"
 	"encoding/json"
+	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 )
+
+var ansiEscapePattern = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 
 // Object implements method that check for file content type.
 type Object string
@@ -42,12 +46,17 @@ func IsJSONString(content string) bool {
 
 // IsYAML checks if the passed content of YAML.
 func IsYAML(log *logrus.Logger, content string) bool {
-	var yml interface{}
-
 	// github.com/goccy/go-yaml can produce panics
 	defer handlePanic(log)
 
-	return yaml.Unmarshal([]byte(content), &yml) == nil
+	var yml interface{}
+	if yaml.Unmarshal([]byte(content), &yml) != nil || yml == nil {
+		return false
+	}
+
+	contentKind := reflect.TypeOf(yml).Kind()
+
+	return contentKind == reflect.Map || contentKind == reflect.Slice
 }
 
 // IsYAMLString checks if the passed content of YAML string.
@@ -63,37 +72,46 @@ func IsYAMLString(log *logrus.Logger, content string) bool {
 // IsCSV checks if the passed content of CSV.
 func IsCSV(content string) bool {
 	csvReader := csv.NewReader(strings.NewReader(content))
-	_, err := csvReader.ReadAll()
+	records, err := csvReader.ReadAll()
+	if err != nil || len(records) < 2 {
+		return false
+	}
 
-	return err == nil
+	return len(records[0]) > 1
+}
+
+func normalizeContent(content string) string {
+	return strings.Trim(ansiEscapePattern.ReplaceAllString(content, ""), "\r\n")
 }
 
 // CheckFileType checks the file type of the content passed, it validates for YAML/JSON.
 func (obj Object) CheckFileType(log *logrus.Logger) string {
 	log.Debug("identifying the input file type, allowed types are YAML/JSON/CSV")
 
-	// if IsCSV(string(obj)) {
-	//	log.Debug("input file type identified as CSV")
-	//
-	//	return FileTypeCSV
-	// }
+	content := normalizeContent(string(obj))
 
-	if IsJSONString(string(obj)) || IsYAMLString(log, string(obj)) {
-		log.Debug("input file type identified as string")
-
-		return FileTypeString
-	}
-
-	if IsJSON(string(obj)) {
+	if IsJSON(content) {
 		log.Debug("input file type identified as JSON")
 
 		return FileTypeJSON
 	}
 
-	if IsYAML(log, string(obj)) {
+	if IsCSV(content) {
+		log.Debug("input file type identified as CSV")
+
+		return FileTypeCSV
+	}
+
+	if IsYAML(log, content) {
 		log.Debug("input file type identified as YAML")
 
 		return FileTypeYAML
+	}
+
+	if IsJSONString(content) || IsYAMLString(log, content) {
+		log.Debug("input file type identified as string")
+
+		return FileTypeString
 	}
 
 	log.Debug("input file type identified as UNKNOWN")

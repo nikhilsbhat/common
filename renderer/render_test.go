@@ -46,7 +46,7 @@ func TestGetRenderer(t *testing.T) {
 
 		obj := content.Object(strReader.String())
 		actual := obj.CheckFileType(logger)
-		assert.Equal(t, "unknown", actual)
+		assert.Equal(t, "json", actual)
 	})
 
 	t.Run("should be able to render the value to yaml successfully", func(t *testing.T) {

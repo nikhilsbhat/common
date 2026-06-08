@@ -3,7 +3,7 @@ BUILD_ENVIRONMENT?=${ENVIRONMENT}
 GOVERSION?=$(shell go version | awk '{printf $$3}')
 APP_DIR?=$(shell git rev-parse --show-toplevel)
 SOURCE_PACKAGES?=$(shell go list -mod=vendor ./... | grep -v "vendor" | grep -v "mocks")
-TEST_FILES?=$(shell go list ./... | grep -v /vendor/ | grep -v examples)
+TEST_FILES?=$(shell go list ./... | grep -v /vendor/ | grep -v '/example$$')
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

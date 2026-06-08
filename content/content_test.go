@@ -31,6 +31,13 @@ func TestObject_CheckFileType(t *testing.T) {
 		assert.Equal(t, "json", actual)
 	})
 
+	t.Run("should validate ansi colored content as json", func(t *testing.T) {
+		obj := content.Object("\x1b[38;2;208;208;208m{\"name\":\"testing\"}\x1b[0m")
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "json", actual)
+	})
+
 	t.Run("should validate content as unknown since malformed json passed", func(t *testing.T) {
 		obj := content.Object(`{"name": "testing"`)
 
@@ -41,6 +48,13 @@ func TestObject_CheckFileType(t *testing.T) {
 	t.Run("should validate content as yaml", func(t *testing.T) {
 		obj := content.Object(`---
 name: "testing"`)
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
+	t.Run("should validate ansi colored content as yaml", func(t *testing.T) {
+		obj := content.Object("\x1b[38;2;106;184;37mname\x1b[0m: \x1b[38;2;237;157;19m\"testing\"\x1b[0m")
 
 		actual := obj.CheckFileType(log)
 		assert.Equal(t, "yaml", actual)
@@ -68,10 +82,10 @@ name: "testing"`)
 
 		obj := content.Object(fileData)
 		actual := obj.CheckFileType(log)
-		assert.Equal(t, "yaml", actual)
+		assert.Equal(t, "string", actual)
 	})
 
-	t.Run("should validate table content as table", func(t *testing.T) {
+	t.Run("should validate table content as string", func(t *testing.T) {
 		data := [][]string{
 			{"sn", "cat", "value"},
 			{"A", "The Good", "500"},
@@ -89,6 +103,6 @@ name: "testing"`)
 
 		obj := content.Object(strReader.String())
 		actual := obj.CheckFileType(log)
-		assert.Equal(t, "csv", actual)
+		assert.Equal(t, "string", actual)
 	})
 }
