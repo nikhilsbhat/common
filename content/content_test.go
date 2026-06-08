@@ -53,8 +53,71 @@ name: "testing"`)
 		assert.Equal(t, "yaml", actual)
 	})
 
+	t.Run("should validate bom prefixed content as yaml", func(t *testing.T) {
+		obj := content.Object("\ufeff---\nname: \"testing\"")
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
 	t.Run("should validate ansi colored content as yaml", func(t *testing.T) {
 		obj := content.Object("\x1b[38;2;106;184;37mname\x1b[0m: \x1b[38;2;237;157;19m\"testing\"\x1b[0m")
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
+	t.Run("should validate anchored content as yaml", func(t *testing.T) {
+		obj := content.Object(`common: &common
+  material: git
+  destination: destination
+pipeline:
+  materials:
+    my-repo:
+      <<: *common
+      url: https://github.com/example/repo.git`)
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
+	t.Run("should validate tagged anchored content as yaml", func(t *testing.T) {
+		obj := content.Object(`pipeline: !pipeline
+  materials:
+    defaults: &defaults
+      branch: main
+    repo:
+      <<: *defaults
+      url: https://github.com/example/repo.git`)
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
+	t.Run("should validate custom tagged content with dotted anchors as yaml", func(t *testing.T) {
+		obj := content.Object(`defaults: &pipeline.defaults
+  environment_variables:
+    SERVICE: api
+pipelines:
+  app:
+    group: !gocd-group "default"
+    <<: *pipeline.defaults`)
+
+		actual := obj.CheckFileType(log)
+		assert.Equal(t, "yaml", actual)
+	})
+
+	t.Run("should validate content with duplicate merge keys as yaml", func(t *testing.T) {
+		obj := content.Object(`common: &common
+  material: git
+  destination: destination
+env: &env
+  environment_variables:
+    SERVICE: api
+pipelines:
+  app:
+    <<: *common
+    <<: *env`)
 
 		actual := obj.CheckFileType(log)
 		assert.Equal(t, "yaml", actual)

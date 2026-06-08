@@ -3,12 +3,14 @@ package content
 import (
 	"encoding/csv"
 	"encoding/json"
-	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/parser"
 	"github.com/sirupsen/logrus"
+	yamlv3 "gopkg.in/yaml.v3"
 )
 
 var ansiEscapePattern = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
@@ -49,14 +51,59 @@ func IsYAML(log *logrus.Logger, content string) bool {
 	// github.com/goccy/go-yaml can produce panics
 	defer handlePanic(log)
 
-	var yml interface{}
-	if yaml.Unmarshal([]byte(content), &yml) != nil || yml == nil {
+	file, err := parser.ParseBytes([]byte(content), 0, parser.AllowDuplicateMapKey())
+	if err == nil {
+		for _, doc := range file.Docs {
+			if doc != nil && isStructuredYAMLNode(doc.Body) {
+				return true
+			}
+		}
+	}
+
+	var node yamlv3.Node
+	if err = yamlv3.Unmarshal([]byte(content), &node); err != nil {
 		return false
 	}
 
-	contentKind := reflect.TypeOf(yml).Kind()
+	return isStructuredYAMLV3Node(&node)
+}
 
-	return contentKind == reflect.Map || contentKind == reflect.Slice
+func isStructuredYAMLNode(node ast.Node) bool {
+	if _, ok := node.(ast.MapNode); ok {
+		return true
+	}
+
+	if _, ok := node.(ast.ArrayNode); ok {
+		return true
+	}
+
+	switch n := node.(type) {
+	case *ast.DocumentNode:
+		return isStructuredYAMLNode(n.Body)
+	case *ast.AnchorNode:
+		return isStructuredYAMLNode(n.Value)
+	case *ast.TagNode:
+		return isStructuredYAMLNode(n.Value)
+	default:
+		return false
+	}
+}
+
+func isStructuredYAMLV3Node(node *yamlv3.Node) bool {
+	if node == nil {
+		return false
+	}
+
+	switch node.Kind {
+	case yamlv3.DocumentNode:
+		return len(node.Content) > 0 && isStructuredYAMLV3Node(node.Content[0])
+	case yamlv3.MappingNode, yamlv3.SequenceNode:
+		return true
+	case yamlv3.AliasNode:
+		return isStructuredYAMLV3Node(node.Alias)
+	default:
+		return false
+	}
 }
 
 // IsYAMLString checks if the passed content of YAML string.
@@ -81,7 +128,10 @@ func IsCSV(content string) bool {
 }
 
 func normalizeContent(content string) string {
-	return strings.Trim(ansiEscapePattern.ReplaceAllString(content, ""), "\r\n")
+	normalized := ansiEscapePattern.ReplaceAllString(content, "")
+	normalized = strings.TrimPrefix(normalized, "\ufeff")
+
+	return strings.Trim(normalized, "\r\n")
 }
 
 // CheckFileType checks the file type of the content passed, it validates for YAML/JSON.
