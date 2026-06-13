@@ -17,23 +17,23 @@ endif
 help: ## Prints help (only for targets with comments)
 	@grep -E '^[a-zA-Z0-9._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-local.fmt: ## Lints all the go code in the application.
+local/fmt: ## Lints all the go code in the application.
 	@gofmt -w $(GOFMT_FILES)
 	$(GOBIN)/gofumpt -l -w $(GOFMT_FILES)
 	$(GOBIN)/goimports -w $(GOFMT_FILES)
 	$(GOBIN)/gci write $(GOFMT_FILES) --skip-generated
 
-local.check: local.fmt ## Loads all the dependencies to vendor directory
+local/check: local/fmt ## Loads all the dependencies to vendor directory
 	@go mod vendor
 	@go mod tidy
 
-local.build: local.check ## Generates the artifact with the help of 'go build'
+local/build: local/check ## Generates the artifact with the help of 'go build'
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} goreleaser build --rm-dist
 
-publish: local.check ## Builds and publishes the app
-	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --rm-dist
+publish: local/check ## Builds and publishes the app
+	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --clean
 
-mock.publish: local.check ## Builds and mocks app release
+mock/publish: local/check ## Builds and mocks app release
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean
 
 lint: ## Lint's application for errors, it is a linters aggregator (https://github.com/golangci/golangci-lint).
@@ -45,5 +45,5 @@ report: ## Publishes the go-report of the appliction (uses go-reportcard)
 test: ## runs test cases
 	@time go test $(TEST_FILES) -mod=vendor -coverprofile cover.out && go tool cover -html=cover.out -o cover.html && open cover.html
 
-generate.mocks:  ## Generates mocks to those methods that has comments //go:generate
+generate/mocks:  ## Generates mocks to those methods that has comments //go:generate
 	@go generate ${SOURCE_PACKAGES}
