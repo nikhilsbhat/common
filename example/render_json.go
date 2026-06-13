@@ -1,4 +1,5 @@
-// nolint:typecheck
+//go:build ignore
+
 package main
 
 import (

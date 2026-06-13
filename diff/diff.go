@@ -1,3 +1,4 @@
+// Package diff provides helpers to compare JSON and YAML data.
 package diff
 
 import (
@@ -24,6 +25,15 @@ type Config struct {
 	log          *logrus.Logger
 }
 
+// NewDiff returns a new instance of Config.
+func NewDiff(format string, noColor bool, log *logrus.Logger) *Config {
+	return &Config{
+		NoColor: noColor,
+		Format:  format,
+		log:     log,
+	}
+}
+
 // Diff identifies the discrepancies between two provided objects, which can be in formats such as YAML or JSON.
 func (cfg *Config) Diff(oldData, newData string) (bool, string, error) {
 	switch cfg.Format {
@@ -48,7 +58,7 @@ func (cfg *Config) Diff(oldData, newData string) (bool, string, error) {
 }
 
 // String returns the string representation of the DataStructure in the specified format.
-func (cfg *Config) String(input interface{}) (string, error) {
+func (cfg *Config) String(input any) (string, error) {
 	switch strings.ToLower(cfg.Format) {
 	case "yaml":
 		yamlIndent := 2
@@ -76,15 +86,6 @@ func (cfg *Config) String(input interface{}) (string, error) {
 		return string(out), nil
 	default:
 		return "", &errors.CommonError{Message: fmt.Sprintf("type '%s' is not supported for loading diff", cfg.Format)}
-	}
-}
-
-// NewDiff returns a new instance of Config.
-func NewDiff(format string, noColor bool, log *logrus.Logger) *Config {
-	return &Config{
-		NoColor: noColor,
-		Format:  format,
-		log:     log,
 	}
 }
 

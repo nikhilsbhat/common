@@ -1,8 +1,10 @@
+// Package prompt provides helpers for reading and validating shell prompts.
 package prompt
 
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -16,6 +18,25 @@ type ReadConfig struct {
 	ShellMessage string    `json:"shell_message,omitempty" yaml:"shell_message,omitempty"`
 	InputOptions []Options `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	logger       *logrus.Logger
+	input        io.Reader
+}
+
+// NewReadConfig returns new instance of ReadConfig.
+func NewReadConfig(name, message string, options []Options, logger *logrus.Logger) *ReadConfig {
+	return &ReadConfig{
+		ShellName:    name,
+		ShellMessage: message,
+		InputOptions: options,
+		logger:       logger,
+		input:        os.Stdin,
+	}
+}
+
+// WithInput configures the input source used by Reader.
+func (cfg *ReadConfig) WithInput(input io.Reader) *ReadConfig {
+	cfg.input = input
+
+	return cfg
 }
 
 // Options that should be considered while configuring the shell reader.
@@ -33,7 +54,12 @@ type Option []Options
 // This would help one in designing the CLI commands that interactively takes input from end user ang validate them.
 // For example: taking inputs such as yes or no from end user.
 func (cfg *ReadConfig) Reader() (bool, Options) {
-	shellReader := bufio.NewReader(os.Stdin)
+	input := cfg.input
+	if input == nil {
+		input = os.Stdin
+	}
+
+	shellReader := bufio.NewReader(input)
 	flattenedInputs := make([]string, 0)
 
 	funk.ForEach(cfg.InputOptions, func(inputOption Options) {
@@ -52,8 +78,8 @@ func (cfg *ReadConfig) Reader() (bool, Options) {
 		inputString := strings.TrimSpace(inputStringRaw)
 		inputLength := len(inputString)
 
-		switch {
-		case inputLength == 0:
+		switch inputLength {
+		case 0:
 			cfg.logger.Warnf("did not get any input, please pass one of the valid inputs '%s'", flattenedInputs)
 
 			return false, Options{}
@@ -91,14 +117,4 @@ func getArrayOfInputs(inputs string) []string {
 	inputs = strings.TrimSuffix(inputs, "\n")
 
 	return strings.Fields(inputs)
-}
-
-// NewReadConfig returns new instance of ReadConfig.
-func NewReadConfig(name, message string, options []Options, logger *logrus.Logger) *ReadConfig {
-	return &ReadConfig{
-		ShellName:    name,
-		ShellMessage: message,
-		InputOptions: options,
-		logger:       logger,
-	}
 }

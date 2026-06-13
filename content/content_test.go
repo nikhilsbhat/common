@@ -10,6 +10,7 @@ import (
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var log *logrus.Logger
@@ -132,7 +133,7 @@ pipelines:
 
 	t.Run("should validate content as csv", func(t *testing.T) {
 		fileData, err := os.ReadFile("../fixtures/sample.csv")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		obj := content.Object(fileData)
 		actual := obj.CheckFileType(log)
@@ -141,7 +142,7 @@ pipelines:
 
 	t.Run("should fail while validating content as csv", func(t *testing.T) {
 		fileData, err := os.ReadFile("../fixtures/sample_faulty.csv")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		obj := content.Object(fileData)
 		actual := obj.CheckFileType(log)
@@ -162,10 +163,32 @@ pipelines:
 		render := renderer.GetRenderer(strReader, log, false, false, false, false, true)
 
 		err := render.Render(data)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		obj := content.Object(strReader.String())
 		actual := obj.CheckFileType(log)
 		assert.Equal(t, "string", actual)
 	})
+}
+
+func TestMarshal(t *testing.T) {
+	t.Run("should marshal data into object", func(t *testing.T) {
+		obj, err := content.Marshal(map[string]string{"name": "testing"})
+
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"testing"}`, obj.String())
+	})
+
+	t.Run("should return error for unsupported data", func(t *testing.T) {
+		obj, err := content.Marshal(func() {})
+
+		require.Error(t, err)
+		assert.Empty(t, obj)
+	})
+}
+
+func TestObject_String(t *testing.T) {
+	obj := content.Object("testing")
+
+	assert.Equal(t, "testing", obj.String())
 }

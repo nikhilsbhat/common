@@ -1,3 +1,4 @@
+// Package renderer provides output rendering and syntax highlighting helpers.
 package renderer
 
 import (
@@ -12,7 +13,9 @@ import (
 )
 
 const (
+	// TypeYAML identifies YAML content for syntax highlighting.
 	TypeYAML = "yaml"
+	// TypeJSON identifies JSON content for syntax highlighting.
 	TypeJSON = "json"
 )
 

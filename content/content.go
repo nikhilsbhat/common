@@ -1,3 +1,4 @@
+// Package content provides helpers for identifying and converting serialized content.
 package content
 
 import (
@@ -19,10 +20,15 @@ var ansiEscapePattern = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 type Object string
 
 const (
-	FileTypeYAML    = "yaml"
-	FileTypeJSON    = "json"
-	FileTypeCSV     = "csv"
-	FileTypeString  = "string"
+	// FileTypeYAML identifies YAML content.
+	FileTypeYAML = "yaml"
+	// FileTypeJSON identifies JSON content.
+	FileTypeJSON = "json"
+	// FileTypeCSV identifies CSV content.
+	FileTypeCSV = "csv"
+	// FileTypeString identifies string content.
+	FileTypeString = "string"
+	// FileTypeUnknown identifies content that could not be classified.
 	FileTypeUnknown = "unknown"
 )
 
@@ -34,7 +40,7 @@ func handlePanic(log *logrus.Logger) {
 
 // IsJSON checks if the passed content of JSON.
 func IsJSON(content string) bool {
-	var js interface{}
+	var js any
 
 	return json.Unmarshal([]byte(content), &js) == nil
 }
@@ -61,7 +67,9 @@ func IsYAML(log *logrus.Logger, content string) bool {
 	}
 
 	var node yamlv3.Node
-	if err = yamlv3.Unmarshal([]byte(content), &node); err != nil {
+
+	err = yamlv3.Unmarshal([]byte(content), &node)
+	if err != nil {
 		return false
 	}
 
@@ -77,13 +85,13 @@ func isStructuredYAMLNode(node ast.Node) bool {
 		return true
 	}
 
-	switch n := node.(type) {
+	switch astNode := node.(type) {
 	case *ast.DocumentNode:
-		return isStructuredYAMLNode(n.Body)
+		return isStructuredYAMLNode(astNode.Body)
 	case *ast.AnchorNode:
-		return isStructuredYAMLNode(n.Value)
+		return isStructuredYAMLNode(astNode.Value)
 	case *ast.TagNode:
-		return isStructuredYAMLNode(n.Value)
+		return isStructuredYAMLNode(astNode.Value)
 	default:
 		return false
 	}
@@ -101,6 +109,8 @@ func isStructuredYAMLV3Node(node *yamlv3.Node) bool {
 		return true
 	case yamlv3.AliasNode:
 		return isStructuredYAMLV3Node(node.Alias)
+	case yamlv3.ScalarNode:
+		return false
 	default:
 		return false
 	}
@@ -119,6 +129,7 @@ func IsYAMLString(log *logrus.Logger, content string) bool {
 // IsCSV checks if the passed content of CSV.
 func IsCSV(content string) bool {
 	csvReader := csv.NewReader(strings.NewReader(content))
+
 	records, err := csvReader.ReadAll()
 	if err != nil || len(records) < 2 {
 		return false
@@ -169,7 +180,8 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	return FileTypeUnknown
 }
 
-func Marshal(data interface{}) (Object, error) {
+// Marshal converts data into an Object by JSON marshaling it.
+func Marshal(data any) (Object, error) {
 	out, err := json.Marshal(data)
 	if err != nil {
 		return "", err

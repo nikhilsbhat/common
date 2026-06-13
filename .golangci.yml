@@ -1,12 +1,11 @@
 ---
+version: "2"
+
 linters:
-  disable-all: false
-  enable-all: true
+  default: all
   disable:
-    - gci
     - gochecknoglobals
     - tagliatelle
-    - exhaustivestruct
     - nolintlint
     - exhaustruct
     - forbidigo
@@ -18,57 +17,47 @@ linters:
     - forcetypeassert
     - dupl
     - goconst
-    - maligned
     - depguard
     - tagalign
+  settings:
+    funlen:
+      lines: 160
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
+    lll:
+      line-length: 165
 
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
+    dupl:
+      threshold: 450
 
-linters-settings:
-  funlen:
-    lines: 160
+    gocognit:
+      min-complexity: 78
 
-  lll:
-    line-length: 165
+    nestif:
+      min-complexity: 20
+  exclusions:
+    paths:
+      - scripts/
+      - vendor/
+      - docs/
+      - example/
+      - Makefile
+      - README.md
+      - Dockerfile
+    rules:
+      - path: _test\.go
+        linters:
+          - mnd
 
-  dupl:
-    threshold: 450
-
-  gocognit:
-    min-complexity: 78
-
-  nestif:
-    min-complexity: 20
-
+      # https://github.com/go-critic/go-critic/issues/926
+      - linters:
+          - gocritic
+        text: "unnecessaryDefer:"
 
 run:
   concurrency: 10
   timeout: 10m
   issues-exit-code: 1
   tests: true
-  skip-dirs:
-    - scripts/
-    - vendor/
-    - docs/
-
-  skip-files:
-    - Makefile
-    - README.md
-    - Dockerfile
 
 severity:
-  default-severity: error
-
-service:
-  golangci-lint-version: 1.27.x
-  prepare:
-    - make local.check
+  default: error

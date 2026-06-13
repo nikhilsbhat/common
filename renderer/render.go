@@ -27,15 +27,15 @@ type Config struct {
 
 // Renderer implements methods that Prints values in YAML,JSON,CSV and Table format.
 type Renderer interface {
-	ToYAML(value interface{}) error
-	ToJSON(value interface{}) error
-	ToCSV(value interface{}) error
-	ToTable(value interface{}) error
+	ToYAML(value any) error
+	ToJSON(value any) error
+	ToCSV(value any) error
+	ToTable(value any) error
 }
 
 // Render renders the output based on the output format selection (toYAML, toJSON).
 // If none is selected it prints as the source.
-func (cfg *Config) Render(value interface{}) error {
+func (cfg *Config) Render(value any) error {
 	if cfg.JSON {
 		return cfg.ToJSON(value)
 	}
@@ -54,7 +54,7 @@ func (cfg *Config) Render(value interface{}) error {
 
 	cfg.logger.Debug("no format was specified for rendering output to defaults")
 
-	_, err := cfg.writer.Write([]byte(fmt.Sprintf("%v\n", value)))
+	_, err := cfg.writer.Write(fmt.Appendf(nil, "%v\n", value))
 	if err != nil {
 		cfg.logger.Fatalln(err)
 	}
@@ -70,7 +70,7 @@ func (cfg *Config) Render(value interface{}) error {
 }
 
 // ToYAML renders the value to YAML format.
-func (cfg *Config) ToYAML(value interface{}) error {
+func (cfg *Config) ToYAML(value any) error {
 	cfg.logger.Debug("rendering output in yaml format since Config.YAML is enabled")
 
 	yamlIndent := 2
@@ -113,7 +113,7 @@ func (cfg *Config) ToYAML(value interface{}) error {
 }
 
 // ToJSON renders the value to JSON format.
-func (cfg *Config) ToJSON(value interface{}) error {
+func (cfg *Config) ToJSON(value any) error {
 	cfg.logger.Debug("rendering output in json format since Config.JSON is enabled")
 
 	valueJSON, err := json.MarshalIndent(value, "", "     ")
@@ -148,7 +148,7 @@ func (cfg *Config) ToJSON(value interface{}) error {
 }
 
 // ToCSV renders the value to CSV format.
-func (cfg *Config) ToCSV(value interface{}) error {
+func (cfg *Config) ToCSV(value any) error {
 	cfg.logger.Debug("rendering output in csv format since Config.CSV is enabled")
 
 	csvString, err := gocsv.MarshalString(value)
@@ -172,13 +172,13 @@ func (cfg *Config) ToCSV(value interface{}) error {
 }
 
 // ToTable renders the value to Table format.
-func (cfg *Config) ToTable(value interface{}) error {
+func (cfg *Config) ToTable(value any) error {
 	cfg.logger.Debug("rendering output in table format since Config.ToTabled is enabled")
 
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 
-	table.SetAlignment(tablewriter.ALIGN_CENTER) //nolint:nosnakecase
+	table.SetAlignment(tablewriter.ALIGN_CENTER)
 	table.SetAutoWrapText(true)
 	table.SetAutoMergeCells(true)
 	table.SetRowLine(true)
